@@ -322,6 +322,13 @@ class SupabaseConnectionPool:
             return
             
         try:
+            if not settings.supabase_url or not settings.supabase_service_role_key:
+                logger.info("ℹ️ Supabase URL or Key not set. Supabase connection pool will be disabled.")
+                self._circuit_breaker_open = True
+                self._circuit_breaker_opened_at = time.time()
+                self._initialized = True
+                return
+
             logger.info(f"Initializing Supabase connection pool with {self.max_connections} connections")
             
             # Create initial pool of connections
@@ -343,6 +350,7 @@ class SupabaseConnectionPool:
         except Exception as e:
             logger.error(f"❌ Failed to initialize Supabase connection pool: {e}")
             raise
+
     
     def _create_client(self) -> Client:
         """Create a new Supabase client"""
